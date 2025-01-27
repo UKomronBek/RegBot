@@ -3,6 +3,9 @@ import json
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from text import *
 from config import *
+import logging
+
+
 
 # Создаем бота с вашим токеном
 API_TOKEN = TOKEN
@@ -309,128 +312,8 @@ def list_users(message):
     for admin_id in ADMIN_IDS:
         bot.send_message(admin_id, user_list, parse_mode="HTML")
 
-######
-# Список мероприятий и их владельцев (аналогично клубам)
-# EVENTS = {
-#     "Газета лицея": 7393504121,  # Пример владельца мероприятия
-#     "6 ДНЕЙ ЗАГРЯЗНЕНИЯ МИРА": 7232041443,
-#     "Волонтеров SLEO": 7393504121
-# }
-#
-# event_info = {
-#     "Газета лицея": gazeta_ly,
-#     "6 ДНЕЙ ЗАГРЯЗНЕНИЯ МИРА": day_6_eco,
-#     "Волонтеров SLEO": SLEO
-# }
-#
-# # Шаги подачи заявки на мероприятие
-# def ask_event(message):
-#     """Запрашиваем выбор мероприятия"""
-#     markup = ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-#     for event_name in EVENTS.keys():
-#         markup.add(KeyboardButton(text=event_name))
-#     bot.send_message(
-#         message.chat.id,
-#         "Выберите мероприятие, на которое хотите подать заявку:",
-#         reply_markup=markup
-#     )
-#     bot.register_next_step_handler(message, process_event_selection)
-#
-#
-# def process_event_selection(message):
-#     """Обрабатываем выбор мероприятия"""
-#     selected_event = message.text
-#
-#     if selected_event not in EVENTS:
-#         bot.send_message(
-#             message.chat.id,
-#             "Неверный выбор. Пожалуйста, выберите мероприятие из списка."
-#         )
-#         ask_event(message)  # Повторно показываем список мероприятий
-#         return
-#
-#     # Запрашиваем резюме
-#     bot.send_message(message.chat.id, "Теперь отправьте ваше резюме (текст, файл, фото или видео).")
-#     bot.register_next_step_handler(message, handle_resume, selected_event)
-#
-#
-# def handle_resume(message, selected_event):
-#     """Обрабатываем резюме пользователя"""
-#     user_info = users_db.get(str(message.chat.id), {})
-#
-#     # Если сообщение — это текст
-#     if message.text:
-#         resume = message.text
-#         resume_type = "текст"
-#
-#     # Если сообщение содержит фото
-#     elif message.photo:
-#         resume_type = "фото"
-#         file_id = message.photo[-1].file_id  # ID последней фотографии
-#         bot.send_photo(EVENTS[selected_event], file_id)  # Пересылаем фото владельцу мероприятия
-#         resume = "Фото отправлено"
-#
-#     # Если сообщение содержит видео
-#     elif message.video:
-#         resume_type = "видео"
-#         file_id = message.video.file_id  # ID видео
-#         bot.send_video(EVENTS[selected_event], file_id)  # Пересылаем видео владельцу мероприятия
-#         resume = "Видео отправлено"
-#
-#     # Если сообщение содержит документ
-#     elif message.document:
-#         resume_type = "файл"
-#         file_id = message.document.file_id  # ID документа
-#         bot.send_document(EVENTS[selected_event], file_id)  # Пересылаем документ владельцу мероприятия
-#         resume = "Файл отправлен"
-#
-#     else:
-#         bot.send_message(message.chat.id, "Пожалуйста, отправьте ваше резюме.")
-#         return
-#
-#     # Отправляем информацию владельцу мероприятия
-#     event_owner_id = EVENTS[selected_event]
-#     event_message = (
-#         f"Новая заявка на мероприятие {selected_event}:\n"
-#         f"Имя: {user_info.get('name', 'Не указано')}\n"
-#         f"Фамилия: {user_info.get('surname', 'Не указано')}\n"
-#         f"Группа: {user_info.get('group', 'Не указано')}\n"
-#         f"Номер телефона: +{user_info.get('phone', 'Не указано')}\n"
-#         f"Telegram ID: {user_info.get('telegram_id', 'Не указано')}\n"
-#         f"Username: @{user_info.get('username', 'Не указано')}\n\n"
-#         f"Резюме ({resume_type}): {resume}"
-#     )
-#
-#     bot.send_message(event_owner_id, event_message, parse_mode="HTML")
-#
-#     # Уведомляем пользователя
-#     bot.send_message(
-#         message.chat.id,
-#         f"Вы успешно подали заявку на мероприятие <b>{selected_event}</b>. Ожидайте обратной связи!",
-#         parse_mode="HTML")
-#
-#     ####################
-#     for admin_id in ADMIN_IDS:
-#         bot.send_message(
-#             admin_id,
-#             f"<b>Для администрации</b>\n\nПользователь {user_info.get('name')}\nЮзернейм: @{user_info.get('username')}\nНомер телефона: +{user_info.get('phone')} \nГруппа: {user_info.get('group')}\nУспешно подал заявку в ивент(событие) {selected_event}. \n\nРезюме ({resume_type}): {resume} ",
-#             parse_mode="HTML")
-#
-#
-# # Команда для подачи заявки на мероприятие
-# @bot.message_handler(commands=['apply_event'])
-# def apply_event(message):
-#     """Команда для подачи заявки на мероприятие"""
-#     if str(message.chat.id) not in users_db:
-#         bot.send_message(message.chat.id,
-#                          "Вы не зарегистрированы! Пожалуйста, сначала пройдите регистрацию с помощью команды /start.")
-#         return
-#
-#     # Запрашиваем выбор мероприятия
-#     ask_event(message)
-
-
+logging.basicConfig(level=logging.INFO)
 # Запуск бота
 if __name__ == "__main__":
     print("Бот запущен и работает...")
-    bot.polling(none_stop=True, interval=0, timeout=100000009)
+    bot.polling(none_stop = True, interval = 0, timeout = 990000)
